@@ -1,4 +1,4 @@
-package com.loadbalancer.payment_gateway;
+package com.loadbalancer.payment_gateway.model;
 
 import lombok.Data;
 
@@ -11,18 +11,20 @@ public class PaymentRequest {
     private String accountNumber;
     private String paymentMethod;
     private String customerName;
+    private String amc;
 
     public PaymentRequest() {
     }
 
     public PaymentRequest(String bank, String currency, double amount, String accountNumber, String paymentMethod,
-            String customerName) {
+            String customerName, String amc) {
         this.bank = bank;
         this.currency = currency;
         this.amount = amount;
         this.accountNumber = accountNumber;
         this.paymentMethod = paymentMethod;
         this.customerName = customerName;
+        this.amc = amc;
     }
 
     @Override
@@ -34,6 +36,7 @@ public class PaymentRequest {
                 ", accountNumber='" + accountNumber + '\'' +
                 ", paymentMethod='" + paymentMethod + '\'' +
                 ", customerName='" + customerName + '\'' +
+                ", amc='" + amc + '\'' +
                 '}';
     }
 }
