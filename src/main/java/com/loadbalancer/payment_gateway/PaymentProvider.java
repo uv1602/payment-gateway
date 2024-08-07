@@ -2,14 +2,16 @@ package com.loadbalancer.payment_gateway;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors
+
+import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.loadbalancer.payment_gateway.entity.Bank;
-import com.loadbalancer.payment_gateway.entity.PaymentGateway;
 import com.loadbalancer.payment_gateway.model.PaymentRequest;
 import com.loadbalancer.payment_gateway.repository.BankRepository;
-import com.loadbalancer.payment_gateway.repository.GatewayBankRepository;
+import com.loadbalancer.payment_gateway.repository.PaymentMappingRepository;
 
 import lombok.Data;
 
@@ -17,23 +19,19 @@ import lombok.Data;
 public class PaymentProvider implements IPaymentGateway {
 
     private long id;
-
     private String name;
-
     private Set<Bank> supportedBanks;
 
-    private List<Bank> banks;
-
     @Autowired
-    private GatewayBankRepository gatewayBankRepository;
+    private PaymentMappingRepository paymentMappingRepository;
 
     @Autowired
     private BankRepository bankRepository;
 
-    public PaymentProvider(PaymentGateway paymentGateway) {
-        this.id = paymentGateway.getId();
-        this.name = paymentGateway.getName();
-        this.supportedBanks = paymentGateway.getSupportedBanks();
+    public PaymentProvider(Long paymentGatewayId) {
+        this.id = paymentGatewayId;
+        // this.name = paymentGateway.getName();
+
     }
 
     @Override
@@ -43,6 +41,6 @@ public class PaymentProvider implements IPaymentGateway {
 
     @Override
     public boolean supportsBank(Bank bank) {
-        return supportedBanks.contains(bank);
+        return true;
     }
 }

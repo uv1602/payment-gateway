@@ -5,38 +5,38 @@ import lombok.Data;
 @Data
 public class PaymentRequest {
 
-    private String bank;
+    private long bankId;
     private String currency;
     private double amount;
     private String accountNumber;
-    private String paymentMethod;
+    private long paymentMethodId;
     private String customerName;
-    private String amc;
+    private long amcId;
 
     public PaymentRequest() {
     }
 
-    public PaymentRequest(String bank, String currency, double amount, String accountNumber, String paymentMethod,
-            String customerName, String amc) {
-        this.bank = bank;
+    public PaymentRequest(long bankId, String currency, double amount, String accountNumber, long paymentMethodId,
+            String customerName, long amcId) {
+        this.bankId = bankId;
         this.currency = currency;
         this.amount = amount;
         this.accountNumber = accountNumber;
-        this.paymentMethod = paymentMethod;
+        this.paymentMethodId = paymentMethodId;
         this.customerName = customerName;
-        this.amc = amc;
+        this.amcId = amcId;
     }
 
     @Override
     public String toString() {
         return "PaymentRequest{" +
-                "bank='" + bank + '\'' +
+                "bank='" + bankId + '\'' +
                 ", currency='" + currency + '\'' +
                 ", amount=" + amount +
                 ", accountNumber='" + accountNumber + '\'' +
-                ", paymentMethod='" + paymentMethod + '\'' +
+                ", paymentMethod='" + paymentMethodId + '\'' +
                 ", customerName='" + customerName + '\'' +
-                ", amc='" + amc + '\'' +
+                ", amc='" + amcId + '\'' +
                 '}';
     }
 }

@@ -1,28 +1,31 @@
 package com.loadbalancer.payment_gateway.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Data;
 
 @Entity
-@Table(name = "gateway_banks")
+@Table(name = "payment_gateway__weight_mapping")
 @Data
-public class GatewayBank {
+public class PaymentMapping {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "gateway_id")
-    private PaymentGateway gateway;
+    @Column(name = "gateway_id")
+    private Long gatewayId;
 
-    @ManyToOne
-    @JoinColumn(name = "bank_id")
-    private Bank bank;
+    @Column(name = "amc_id")
+    private Long amcId;
+
+    @Column(name = "payment_method_id")
+    private Long paymentMethodId;
+
+    @Column(name = "weight")
+    private Integer weight;
 }

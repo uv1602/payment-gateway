@@ -1,5 +1,7 @@
 package com.loadbalancer.payment_gateway.entity;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -16,4 +18,10 @@ public class Bank {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
+
+    private boolean delFlag;
+    private LocalDateTime createdDate;
+    private String createdBy;
+    private LocalDateTime lastUpdateTime;
+    private String lastUpdateBy;
 }
