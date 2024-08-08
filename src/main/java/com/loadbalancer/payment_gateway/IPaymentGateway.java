@@ -7,5 +7,5 @@ public interface IPaymentGateway {
 
     boolean processPayment(PaymentRequest request);
 
-    boolean supportsBank(Bank bank);
+    boolean supportsBank(Bank bank, long amcId, long paymentMethodId);
 }

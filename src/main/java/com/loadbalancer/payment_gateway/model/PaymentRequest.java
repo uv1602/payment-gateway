@@ -1,8 +1,12 @@
 package com.loadbalancer.payment_gateway.model;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 @Data
+@Setter
+@Getter
 public class PaymentRequest {
 
     private long bankId;

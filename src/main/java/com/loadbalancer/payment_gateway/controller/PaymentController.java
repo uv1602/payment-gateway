@@ -18,9 +18,10 @@ public class PaymentController {
     @PostMapping("/api/v1/payments")
     public ResponseEntity<String> processPayment(@RequestBody PaymentRequest request) {
         try {
+            // System.out.println(request);
             boolean result = loadBalancerService.processPayment(request);
-            if (result) {
-            } else {
+            if (!result) {
+                System.out.println("Payment Failed");
                 throw new RuntimeException();
             }
             return ResponseEntity.ok("Payment Processed");

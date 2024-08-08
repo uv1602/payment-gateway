@@ -1,14 +1,10 @@
 package com.loadbalancer.payment_gateway;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.function.IntFunction;
 import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -36,66 +32,51 @@ public class PaymentControllerTests {
         private WeightedLoadBalancerService loadBalancerService;
 
         @Autowired
-        private ObjectMapper objectMapper; // For converting objects to JSON
-
-        private final CountDownLatch latch = new CountDownLatch(1);
+        private ObjectMapper objectMapper;
 
         @AfterEach
         public void printLoadDistribution() {
                 System.out.println("Load Distribution:");
                 loadBalancerService.getGatewayUsage().forEach(
-                                (gateway, count) -> System.out.println(gateway + " handled " + count + " requests"));
+                                (gateway, count) -> System.out
+                                                .println(gateway.getId() + " handled " + count + " requests"));
         }
 
         @Test
-        public void testMultipleSuccessfulPayments() throws Exception {
-                ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+        public void test1000ConcurrentPayments() throws Exception {
+                CompletableFuture<?>[] futures = IntStream.range(0, 1000) // Adjust the range as needed
+                                .mapToObj(i -> processPaymentAsync(
+                                                4L,
+                                                4L,
+                                                4L,
+                                                "No available payment provider supports the bank: ",
+                                                status().isBadRequest(),
+                                                "John Doe"))
+                                .toArray(CompletableFuture[]::new);
 
-                Runnable task = () -> {
-                        try {
-                                CompletableFuture<?>[] futures = IntStream.range(0, 10) // Adjust the range as needed
-                                                .mapToObj((IntFunction<CompletableFuture<?>>) i -> processPaymentAsync(
-                                                                "Bank Y",
-                                                                "Credit Card",
-                                                                "AMC Alpha",
-                                                                "Payment Processed",
-                                                                status().isOk(),
-                                                                "John Doe"))
-                                                .toArray(CompletableFuture[]::new);
+                // Wait until all requests are completed
+                CompletableFuture.allOf(futures).join();
 
-                                CompletableFuture.allOf(futures).join();
-                        } catch (Exception e) {
-                                e.printStackTrace();
-                        }
-                };
+                CompletableFuture<?>[] futures1 = IntStream.range(0, 1000) // Adjust the range as needed
+                                .mapToObj(i -> processPaymentAsync(
+                                                5L,
+                                                5L,
+                                                5L,
+                                                "",
+                                                status().isBadRequest(),
+                                                "John Doe"))
+                                .toArray(CompletableFuture[]::new);
 
-                // Schedule the task to run every second, starting after a 10-second delay
-                executor.scheduleAtFixedRate(task, 10, 1, TimeUnit.SECONDS);
-
-                // Run for 5 minutes
-                new Thread(() -> {
-                        try {
-                                Thread.sleep(2 * 60 * 1000);
-                                latch.countDown(); // Signal that the test should end
-                        } catch (InterruptedException e) {
-                                e.printStackTrace();
-                        }
-                }).start();
-
-                // Wait until latch is counted down
-                latch.await();
-
-                // Shutdown executor
-                executor.shutdown();
-                executor.awaitTermination(1, TimeUnit.MINUTES);
+                // Wait until all requests are completed
+                CompletableFuture.allOf(futures1).join();
         }
 
         @Async
-        public CompletableFuture<Void> processPaymentAsync(String bank, String paymentMethod, String amc,
+        public CompletableFuture<Void> processPaymentAsync(long bankId, long paymentMethodId, long amcId,
                         String expectedMessage, ResultMatcher expectedStatus, String customerName) {
                 try {
-                        PaymentRequest paymentRequest = new PaymentRequest(bank, "USD", 100.0,
-                                        "123456789", paymentMethod, customerName, amc);
+                        PaymentRequest paymentRequest = new PaymentRequest(bankId, "USD", 100.0,
+                                        "123456789", paymentMethodId, customerName, amcId);
                         String requestJson = objectMapper.writeValueAsString(paymentRequest);
 
                         mockMvc.perform(post("/api/v1/payments")
@@ -105,6 +86,7 @@ public class PaymentControllerTests {
                                         .andExpect(content().string(expectedMessage));
                 } catch (Exception e) {
                         e.printStackTrace();
+                        Assertions.fail("Test failed due to exception: " + e.getMessage());
                 }
                 return CompletableFuture.completedFuture(null);
         }

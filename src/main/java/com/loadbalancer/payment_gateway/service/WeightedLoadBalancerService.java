@@ -264,6 +264,7 @@ import com.loadbalancer.payment_gateway.entity.PaymentGateway;
 import com.loadbalancer.payment_gateway.entity.PaymentMapping;
 import com.loadbalancer.payment_gateway.model.PaymentRequest;
 import com.loadbalancer.payment_gateway.repository.BankRepository;
+import com.loadbalancer.payment_gateway.repository.GatewayBankRepository;
 import com.loadbalancer.payment_gateway.repository.PaymentGatewayRepository;
 import com.loadbalancer.payment_gateway.repository.PaymentMappingRepository;
 
@@ -285,9 +286,13 @@ public class WeightedLoadBalancerService {
     @Autowired
     private BankRepository bankRepository;
 
+    @Autowired
+    private GatewayBankRepository gatewayBankRepository;
+
     public Set<Bank> findSupportedBanks(Long amcId, Long paymentMethodId) {
         List<PaymentMapping> mappings = paymentMappingRepository.findByAmcIdAndPaymentMethodId(amcId, paymentMethodId);
 
+        System.out.println(mappings);
         Set<Bank> supportedBanks = new HashSet<>();
         for (PaymentMapping mapping : mappings) {
             PaymentGateway gateway = paymentGatewayRepository.findById(mapping.getGatewayId())
@@ -295,32 +300,39 @@ public class WeightedLoadBalancerService {
                             () -> new RuntimeException("PaymentGateway not found with id: " + mapping.getGatewayId()));
             supportedBanks.addAll(gateway.getBanks());
         }
-
+        System.out.println(supportedBanks);
         return supportedBanks;
     }
 
     @PostConstruct
     public void loadGatewayData() {
         Map<Long, Integer> mappingPayment = paymentMappingRepository.findAll().stream()
-                .collect(Collectors.toMap(PaymentMapping::getGatewayId, PaymentMapping::getWeight));
-
+                .collect(Collectors.toMap(
+                        PaymentMapping::getGatewayId,
+                        PaymentMapping::getWeight,
+                        Integer::sum));
         mappingPayment.forEach((gatewayId, weight) -> {
-            PaymentProvider paymentProvider = new PaymentProvider(gatewayId);
-
+            PaymentProvider paymentProvider = new PaymentProvider(paymentMappingRepository, bankRepository,
+                    gatewayBankRepository);
+            paymentProvider.initialize(gatewayId);
             gatewayWeights.put(paymentProvider, weight);
             gatewayUsage.put(paymentProvider, 0);
             unsupportedBankRequests.put(paymentProvider, 0);
         });
+        System.out.println(gatewayWeights);
     }
 
     public boolean processPayment(PaymentRequest request) throws Exception {
+        System.out.println(request);
+        Bank bank = this.bankRepository.findById(request.getBankId()).orElseThrow();
         List<PaymentProvider> providers = gatewayWeights.keySet().stream()
                 .filter(provider -> provider
-                        .supportsBank(this.bankRepository.findById(request.getBankId()).orElse(new Bank())))
+                        .supportsBank(bank, request.getAmcId(), request.getPaymentMethodId()))
                 .collect(Collectors.toList());
-
+        System.out.println(providers);
         if (providers.isEmpty()) {
             // trackUnsupportedBankRequest(request.getBank().getName());
+            System.out.println("Payment Failed");
             throw new Exception("No available payment provider supports the bank: ");
         }
 
