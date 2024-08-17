@@ -1,22 +1,15 @@
 package com.loadbalancer.payment_gateway.entity;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Entity
-@Table(name = "payment_gateways")
 @Data
+@NoArgsConstructor
+@Entity
 public class PaymentGateway {
 
     @Id
@@ -24,8 +17,6 @@ public class PaymentGateway {
     private Long id;
     private String name;
     private String description;
-
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "gateway_banks", joinColumns = @JoinColumn(name = "gateway_id"), inverseJoinColumns = @JoinColumn(name = "bank_id"))
-    private Set<Bank> banks = new HashSet<>();
+    private String url;
+    private String fallback_url;
 }
